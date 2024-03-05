@@ -1,12 +1,14 @@
 use std::fs::write;
 use std::io;
-use c_emit::Code;
+
+use c_emit::{CArg, Code};
 
 fn main() -> io::Result<()> {
     let mut code = Code::new();
 
     code.include("stdio.h");
-    code.call_func("printf");
+    code.call_func_with_args("printf", vec![CArg::String("Hello World! \"How are you?\"\n \r\n \t".to_string())]);
+    code.exit(1);
 
     write("examples/hello_world.c", code.to_string())
 }
