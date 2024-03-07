@@ -1,16 +1,80 @@
+//! # **The C Code Generator for Rust.**
+//!
+//! C-Emit provides a polished Builder API for generating C Code.
+//!
+//! ## Example
+//!
+//! ```rust
+//! use c_emit::{Code, CArg};
+//!
+//! fn main() {
+//!     let mut code = Code::new();
+//!
+//!     code.include("stdio.h");
+//!     code.call_func_with_args("printf", vec![CArg::String("Hello, world!".to_string())]);
+//!
+//!     assert_eq!(code.to_string(), r#"
+//! #include<stdio.h>
+//! int main() {
+//! printf("Hello, world!");
+//! return 0;
+//! }
+//! "#.trim_start().to_string());
+//! }
+//! ```
+
+#![deny(missing_docs)]
+
 use std::fmt::{Display, Formatter};
 
+/// # The Code Struct.
+///
+/// ## Example
+///
+/// ```rust
+/// use c_emit::Code;
+///
+/// fn main() {
+///     let mut code = Code::new();
+///
+///     code.exit(1);
+///
+///     assert_eq!(code.to_string(), r#"
+/// int main() {
+/// return 1;
+/// }
+/// "#.trim_start().to_string());
+/// }
+/// ```
 pub struct Code {
     code: String,
     requires: Vec<String>,
     exit: i32
 }
 
+/// # The C Argument.
 pub enum CArg {
+    /// The String argument.
     String(String)
 }
 
 impl Code {
+    /// # Create a new C Code object.
+    ///
+    /// ## Example
+    /// ```rust
+    /// use c_emit::Code;
+    ///
+    /// fn main() {
+    ///     let code = Code::new();
+    ///
+    ///     assert_eq!(code.to_string(), r#"
+    /// int main() {
+    /// return 0;
+    /// }
+    /// "#.trim_start().to_string());
+    /// }
+    /// ```
     pub fn new() -> Self {
         Self {
             code: String::new(),
@@ -18,16 +82,99 @@ impl Code {
             exit: 0,
         }
     }
+
+    /// # Add the exit code to the main function.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use c_emit::Code;
+    ///
+    /// fn main() {
+    ///     let mut code = Code::new();
+    ///
+    ///     code.exit(1);
+    ///
+    ///     assert_eq!(code.to_string(), r#"
+    /// int main() {
+    /// return 1;
+    /// }
+    /// "#.trim_start().to_string());
+    /// }
+    /// ```
     pub fn exit(&mut self, code: i32) {
         self.exit = code;
     }
+
+    /// # #include < any file into the C Code. >
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use c_emit::Code;
+    ///
+    /// fn main() {
+    ///     let mut code = Code::new();
+    ///
+    ///     code.include("stdio.h");
+    ///
+    ///     assert_eq!(code.to_string(), r#"
+    /// #include<stdio.h>
+    /// int main() {
+    /// return 0;
+    /// }
+    /// "#.trim_start().to_string());
+    /// }
+    /// ```
     pub fn include(&mut self, file: &str) {
         self.requires.push(file.to_string());
     }
+
+    /// # Call a function WITHOUT arguments.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use c_emit::Code;
+    ///
+    /// fn main() {
+    ///     let mut code = Code::new();
+    ///
+    ///     code.call_func("printf");
+    ///
+    ///     assert_eq!(code.to_string(), r#"
+    /// int main() {
+    /// printf();
+    /// return 0;
+    /// }
+    /// "#.trim_start().to_string());
+    /// }
+    /// ```
     pub fn call_func(&mut self, func: &str) {
         self.code.push_str(func);
         self.code.push_str("();\n")
     }
+
+    /// # Call a function WITH arguments.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use c_emit::{Code, CArg};
+    ///
+    /// fn main() {
+    ///     let mut code = Code::new();
+    ///
+    ///     code.call_func_with_args("printf", vec![CArg::String("Hello, world!".to_string())]);
+    ///
+    ///     assert_eq!(code.to_string(), r#"
+    /// int main() {
+    /// printf("Hello, world!");
+    /// return 0;
+    /// }
+    /// "#.trim_start().to_string());
+    /// }
+    /// ```
     pub fn call_func_with_args(&mut self, func: &str, args: Vec<CArg>) {
         self.code.push_str(func);
         self.code.push_str("(");
