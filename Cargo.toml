@@ -1,7 +1,13 @@
 [package]
 name = "c-emit"
 version = "0.1.0"
+description = "Polished builder API to write C Code."
+license = "Apache-2.0"
+documentation = "https://docs.rs/c-emit"
+repository = "https://github.com/Solarcode-org/c-emit"
+homepage = "https://github.com/Solarcode-org/c-emit"
 edition = "2021"
+authors = ["ArnabRollin"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
