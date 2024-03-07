@@ -16,7 +16,7 @@
 //!     assert_eq!(code.to_string(), r#"
 //! #include<stdio.h>
 //! int main() {
-//! printf("Hello, world!",);
+//! printf("Hello, world!");
 //! return 0;
 //! }
 //! "#.trim_start().to_string());
@@ -169,7 +169,7 @@ impl Code {
     ///
     ///     assert_eq!(code.to_string(), r#"
     /// int main() {
-    /// printf("Hello, world!",);
+    /// printf("Hello, world!");
     /// return 0;
     /// }
     /// "#.trim_start().to_string());
@@ -193,6 +193,10 @@ impl Code {
                 }
             }
             self.code.push(',');
+        }
+
+        if self.code.ends_with(',') {
+            self.code = self.code.strip_suffix(',').unwrap().to_string();
         }
 
         self.code.push_str(");\n")
@@ -254,6 +258,6 @@ mod tests {
         code.call_func_with_args("printf", vec![CArg::String("Hello World! \"How are you?\"\n \r\n \t".to_string()), CArg::String("Hi".to_string())]);
 
 
-        assert_eq!(code.to_string(), "int main() {\nprintf(\"Hello World! \\\"How are you?\\\"\\n \\r\\n \\t\",\"Hi\",);\nreturn 0;\n}\n");
+        assert_eq!(code.to_string(), "int main() {\nprintf(\"Hello World! \\\"How are you?\\\"\\n \\r\\n \\t\",\"Hi\");\nreturn 0;\n}\n");
     }
 }
