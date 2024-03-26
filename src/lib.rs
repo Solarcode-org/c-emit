@@ -7,20 +7,17 @@
 //! ```rust
 //! use c_emit::{Code, CArg};
 //!
-//! fn main() {
-//!     let mut code = Code::new();
+//! let mut code = Code::new();
 //!
-//!     code.include("stdio.h");
-//!     code.call_func_with_args("printf", vec![CArg::String("Hello, world!".to_string())]);
-//!
-//!     assert_eq!(code.to_string(), r#"
+//! code.include("stdio.h");
+//! code.call_func_with_args("printf", vec![CArg::String("Hello, world!".to_string())]);
+//! assert_eq!(code.to_string(), r#"
 //! #include<stdio.h>
 //! int main() {
 //! printf("Hello, world!");
 //! return 0;
 //! }
 //! "#.trim_start().to_string());
-//! }
 //! ```
 
 #![deny(missing_docs)]
@@ -34,17 +31,15 @@ use std::fmt::{Display, Formatter};
 /// ```rust
 /// use c_emit::Code;
 ///
-/// fn main() {
-///     let mut code = Code::new();
+/// let mut code = Code::new();
 ///
-///     code.exit(1);
+/// code.exit(1);
 ///
-///     assert_eq!(code.to_string(), r#"
+/// assert_eq!(code.to_string(), r#"
 /// int main() {
 /// return 1;
 /// }
 /// "#.trim_start().to_string());
-/// }
 /// ```
 pub struct Code {
     code: String,
@@ -58,6 +53,12 @@ pub enum CArg {
     String(String)
 }
 
+impl Default for Code {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Code {
     /// # Create a new C Code object.
     ///
@@ -65,15 +66,13 @@ impl Code {
     /// ```rust
     /// use c_emit::Code;
     ///
-    /// fn main() {
-    ///     let code = Code::new();
+    /// let code = Code::new();
     ///
-    ///     assert_eq!(code.to_string(), r#"
+    /// assert_eq!(code.to_string(), r#"
     /// int main() {
     /// return 0;
     /// }
     /// "#.trim_start().to_string());
-    /// }
     /// ```
     pub fn new() -> Self {
         Self {
@@ -90,17 +89,15 @@ impl Code {
     /// ```rust
     /// use c_emit::Code;
     ///
-    /// fn main() {
-    ///     let mut code = Code::new();
+    /// let mut code = Code::new();
     ///
-    ///     code.exit(1);
+    /// code.exit(1);
     ///
-    ///     assert_eq!(code.to_string(), r#"
+    /// assert_eq!(code.to_string(), r#"
     /// int main() {
     /// return 1;
     /// }
     /// "#.trim_start().to_string());
-    /// }
     /// ```
     pub fn exit(&mut self, code: i32) {
         self.exit = code;
@@ -113,20 +110,21 @@ impl Code {
     /// ```rust
     /// use c_emit::Code;
     ///
-    /// fn main() {
-    ///     let mut code = Code::new();
+    /// let mut code = Code::new();
     ///
-    ///     code.include("stdio.h");
+    /// code.include("stdio.h");
     ///
-    ///     assert_eq!(code.to_string(), r#"
+    /// assert_eq!(code.to_string(), r#"
     /// #include<stdio.h>
     /// int main() {
     /// return 0;
     /// }
     /// "#.trim_start().to_string());
-    /// }
     /// ```
     pub fn include(&mut self, file: &str) {
+        if self.requires.contains(&file.to_string()) {
+            return
+        }
         self.requires.push(file.to_string());
     }
 
@@ -137,18 +135,16 @@ impl Code {
     /// ```rust
     /// use c_emit::Code;
     ///
-    /// fn main() {
-    ///     let mut code = Code::new();
+    /// let mut code = Code::new();
     ///
-    ///     code.call_func("printf");
+    /// code.call_func("printf");
     ///
-    ///     assert_eq!(code.to_string(), r#"
+    /// assert_eq!(code.to_string(), r#"
     /// int main() {
     /// printf();
     /// return 0;
     /// }
     /// "#.trim_start().to_string());
-    /// }
     /// ```
     pub fn call_func(&mut self, func: &str) {
         self.code.push_str(func);
@@ -162,22 +158,20 @@ impl Code {
     /// ```rust
     /// use c_emit::{Code, CArg};
     ///
-    /// fn main() {
-    ///     let mut code = Code::new();
+    /// let mut code = Code::new();
     ///
-    ///     code.call_func_with_args("printf", vec![CArg::String("Hello, world!".to_string())]);
+    /// code.call_func_with_args("printf", vec![CArg::String("Hello, world!".to_string())]);
     ///
-    ///     assert_eq!(code.to_string(), r#"
+    /// assert_eq!(code.to_string(), r#"
     /// int main() {
     /// printf("Hello, world!");
     /// return 0;
     /// }
     /// "#.trim_start().to_string());
-    /// }
     /// ```
     pub fn call_func_with_args(&mut self, func: &str, args: Vec<CArg>) {
         self.code.push_str(func);
-        self.code.push_str("(");
+        self.code.push('(');
 
         for arg in args {
             match arg {
@@ -209,7 +203,7 @@ impl Display for Code {
 
         for require in &self.requires {
             require_string.push_str("#include<");
-            require_string.extend(require.chars());
+            require_string.push_str(require);
             require_string.push_str(">\n");
         }
 
@@ -259,5 +253,14 @@ mod tests {
 
 
         assert_eq!(code.to_string(), "int main() {\nprintf(\"Hello World! \\\"How are you?\\\"\\n \\r\\n \\t\",\"Hi\");\nreturn 0;\n}\n");
+    }
+    #[test]
+    fn test_multiple_requires() {
+        let mut code = Code::new();
+
+        code.include("stdio.h");
+        code.include("stdio.h");
+
+        assert_eq!(code.to_string(), "#include<stdio.h>\nint main() {\nreturn 0;\n}\n");
     }
 }
