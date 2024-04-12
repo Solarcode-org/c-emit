@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main, Criterion};
 use c_emit::{CArg, Code};
+use criterion::{criterion_group, criterion_main, Criterion};
 
 fn bench_simple(c: &mut Criterion) {
     c.bench_function("bench_simple", |b| {

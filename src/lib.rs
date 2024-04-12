@@ -44,13 +44,13 @@ use std::fmt::{Display, Formatter};
 pub struct Code {
     code: String,
     requires: Vec<String>,
-    exit: i32
+    exit: i32,
 }
 
 /// # The C Argument.
 pub enum CArg {
     /// The String argument.
-    String(String)
+    String(String),
 }
 
 impl Default for Code {
@@ -123,7 +123,7 @@ impl Code {
     /// ```
     pub fn include(&mut self, file: &str) {
         if self.requires.contains(&file.to_string()) {
-            return
+            return;
         }
         self.requires.push(file.to_string());
     }
@@ -176,8 +176,8 @@ impl Code {
         for arg in args {
             match arg {
                 CArg::String(s) => {
-                    let s = s.replace("\r\n","\\r\\n");
-                    let s = s.replace('\n',"\\n");
+                    let s = s.replace("\r\n", "\\r\\n");
+                    let s = s.replace('\n', "\\n");
                     let s = s.replace('\t', "\\t");
                     let s = s.replace('"', "\\\"");
 
@@ -207,7 +207,11 @@ impl Display for Code {
             require_string.push_str(">\n");
         }
 
-        writeln!(f, "{}int main() {{\n{}return {};\n}}", require_string, self.code, self.exit)
+        writeln!(
+            f,
+            "{}int main() {{\n{}return {};\n}}",
+            require_string, self.code, self.exit
+        )
     }
 }
 
@@ -235,7 +239,10 @@ mod tests {
 
         code.include("stdio.h");
 
-        assert_eq!(code.to_string(), "#include<stdio.h>\nint main() {\nreturn 0;\n}\n");
+        assert_eq!(
+            code.to_string(),
+            "#include<stdio.h>\nint main() {\nreturn 0;\n}\n"
+        );
     }
     #[test]
     fn test_func() {
@@ -249,8 +256,13 @@ mod tests {
     fn test_func_with_args() {
         let mut code = Code::new();
 
-        code.call_func_with_args("printf", vec![CArg::String("Hello World! \"How are you?\"\n \r\n \t".to_string()), CArg::String("Hi".to_string())]);
-
+        code.call_func_with_args(
+            "printf",
+            vec![
+                CArg::String("Hello World! \"How are you?\"\n \r\n \t".to_string()),
+                CArg::String("Hi".to_string()),
+            ],
+        );
 
         assert_eq!(code.to_string(), "int main() {\nprintf(\"Hello World! \\\"How are you?\\\"\\n \\r\\n \\t\",\"Hi\");\nreturn 0;\n}\n");
     }
@@ -261,6 +273,9 @@ mod tests {
         code.include("stdio.h");
         code.include("stdio.h");
 
-        assert_eq!(code.to_string(), "#include<stdio.h>\nint main() {\nreturn 0;\n}\n");
+        assert_eq!(
+            code.to_string(),
+            "#include<stdio.h>\nint main() {\nreturn 0;\n}\n"
+        );
     }
 }
