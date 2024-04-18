@@ -51,6 +51,24 @@ pub struct Code {
 pub enum CArg {
     /// The String argument.
     String(String),
+
+    /// The identifier argument.
+    Ident(String),
+
+    /// The i32 argument.
+    Int32(i32),
+
+    /// The i64 argument.
+    Int64(i64),
+
+    /// The float argument.
+    Float(i64),
+
+    /// The 'double' argument.
+    Double(f64),
+
+    /// The boolean argument.
+    Bool(bool),
 }
 
 impl Default for Code {
@@ -185,6 +203,24 @@ impl Code {
                     self.code.push_str(s.as_str());
                     self.code.push('"');
                 }
+                CArg::Ident(id) => {
+                    self.code.push_str(&id);
+                }
+                CArg::Int32(n) => {
+                    self.code.push_str(&n.to_string());
+                }
+                CArg::Int64(n) => {
+                    self.code.push_str(&n.to_string());
+                }
+                CArg::Float(n) => {
+                    self.code.push_str(&n.to_string());
+                }
+                CArg::Double(n) => {
+                    self.code.push_str(&n.to_string());
+                }
+                CArg::Bool(b) => {
+                    self.code.push_str(&b.to_string());
+                }
             }
             self.code.push(',');
         }
@@ -194,6 +230,48 @@ impl Code {
         }
 
         self.code.push_str(");\n")
+    }
+
+    /// # Make a new string variable.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use c_emit::{Code, CArg};
+    ///
+    /// let mut code = Code::new();
+    ///
+    /// code.new_var_string("a", Some("hello"), None);
+    ///
+    /// assert_eq!(code.to_string(), r#"
+    /// int main() {
+    /// char a[]="hello";
+    /// return 0;
+    /// }
+    /// "#.trim_start().to_string());
+    ///
+    /// ```
+    /// ## NOTE:
+    /// Set the `initval` argument to `None` to make the variable uninitialized.
+    pub fn new_var_string<S: AsRef<str>>(
+        &mut self,
+        name: S,
+        initval: Option<S>,
+        size: Option<u32>,
+    ) {
+        self.code.push_str("char ");
+        self.code.push_str(name.as_ref());
+
+        if initval.is_none() {
+            self.code.push('[');
+            self.code
+                .push_str(&size.expect("Expected size if uninitialized.").to_string());
+            self.code.push_str("];");
+        } else {
+            self.code.push_str("[]=\"");
+            self.code.push_str(initval.unwrap().as_ref());
+            self.code.push_str("\";\n");
+        }
     }
 }
 
@@ -276,6 +354,31 @@ mod tests {
         assert_eq!(
             code.to_string(),
             "#include<stdio.h>\nint main() {\nreturn 0;\n}\n"
+        );
+    }
+
+    #[test]
+    fn test_variable_string() {
+        let mut code = Code::new();
+
+        code.new_var_string("a", Some("Hi"), None);
+
+        assert_eq!(
+            code.to_string(),
+            "int main() {\nchar a[]=\"Hi\";\nreturn 0;\n}\n"
+        );
+    }
+
+    #[test]
+    fn test_variable_string_arg() {
+        let mut code = Code::new();
+
+        code.new_var_string("a", Some("Hi"), None);
+        code.call_func_with_args("printf", vec![CArg::Ident("a".to_string())]);
+
+        assert_eq!(
+            code.to_string(),
+            "int main() {\nchar a[]=\"Hi\";\nprintf(a);\nreturn 0;\n}\n"
         );
     }
 }
