@@ -7,7 +7,7 @@ fn bench_simple(c: &mut Criterion) {
             let mut c = Code::new();
 
             c.exit(1);
-            c.call_func_with_args("printf", vec![CArg::String("Hello World!".to_string())]);
+            c.call_func_with_args("printf", vec![CArg::String("Hello World!")]);
             c.call_func("printf");
             c.include("stdio.h");
 

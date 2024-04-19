@@ -41,19 +41,19 @@ use std::fmt::{Display, Formatter};
 /// }
 /// "#.trim_start().to_string());
 /// ```
-pub struct Code {
+pub struct Code<'a> {
     code: String,
-    requires: Vec<String>,
+    requires: Vec<&'a str>,
     exit: i32,
 }
 
 /// # The C Argument.
-pub enum CArg {
+pub enum CArg<'a> {
     /// The String argument.
-    String(String),
+    String(&'a str),
 
     /// The identifier argument.
-    Ident(String),
+    Ident(&'a str),
 
     /// The i32 argument.
     Int32(i32),
@@ -62,7 +62,7 @@ pub enum CArg {
     Int64(i64),
 
     /// The float argument.
-    Float(i64),
+    Float(f32),
 
     /// The 'double' argument.
     Double(f64),
@@ -71,13 +71,13 @@ pub enum CArg {
     Bool(bool),
 }
 
-impl Default for Code {
+impl Default for Code<'_> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Code {
+impl Code<'_> {
     /// # Create a new C Code object.
     ///
     /// ## Example
@@ -139,11 +139,11 @@ impl Code {
     /// }
     /// "#.trim_start().to_string());
     /// ```
-    pub fn include(&mut self, file: &str) {
-        if self.requires.contains(&file.to_string()) {
+    pub fn include(&mut self, file: &'static str) {
+        if self.requires.contains(&file) {
             return;
         }
-        self.requires.push(file.to_string());
+        self.requires.push(file);
     }
 
     /// # Call a function WITHOUT arguments.
@@ -204,7 +204,7 @@ impl Code {
                     self.code.push('"');
                 }
                 CArg::Ident(id) => {
-                    self.code.push_str(&id);
+                    self.code.push_str(id);
                 }
                 CArg::Int32(n) => {
                     self.code.push_str(&n.to_string());
@@ -269,13 +269,15 @@ impl Code {
             self.code.push_str("];");
         } else {
             self.code.push_str("[]=\"");
-            self.code.push_str(initval.unwrap().as_ref());
+            if let Some(val) = initval {
+                self.code.push_str(val.as_ref());
+            }
             self.code.push_str("\";\n");
         }
     }
 }
 
-impl Display for Code {
+impl Display for Code<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut require_string = String::new();
 
@@ -337,8 +339,8 @@ mod tests {
         code.call_func_with_args(
             "printf",
             vec![
-                CArg::String("Hello World! \"How are you?\"\n \r\n \t".to_string()),
-                CArg::String("Hi".to_string()),
+                CArg::String("Hello World! \"How are you?\"\n \r\n \t"),
+                CArg::String("Hi"),
             ],
         );
 
@@ -374,7 +376,7 @@ mod tests {
         let mut code = Code::new();
 
         code.new_var_string("a", Some("Hi"), None);
-        code.call_func_with_args("printf", vec![CArg::Ident("a".to_string())]);
+        code.call_func_with_args("printf", vec![CArg::Ident("a")]);
 
         assert_eq!(
             code.to_string(),
