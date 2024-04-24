@@ -270,11 +270,11 @@ impl Code<'_> {
     /// ## Example
     ///
     /// ```rust
-    /// use c_emit::{Code, CArg};
+    /// use c_emit::{Code, CArg, VarInit};
     ///
     /// let mut code = Code::new();
     ///
-    /// code.new_var("a", VarInit::Initval("hello"));
+    /// code.new_var("a", VarInit::String("hello"));
     ///
     /// assert_eq!(code.to_string(), r#"
     /// int main() {
