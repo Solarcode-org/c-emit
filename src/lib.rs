@@ -69,6 +69,36 @@ pub enum CArg<'a> {
 
     /// The boolean argument.
     Bool(bool),
+
+    /// The character argument.
+    Char(char),
+}
+
+/// # The C Argument.
+pub enum VarInit<'a> {
+    /// Initialize a string.
+    String(&'a str),
+
+    /// Initialize an i32.
+    Int32(i32),
+
+    /// Initialize an i64.
+    Int64(i64),
+
+    /// Initialize a float.
+    Float(f32),
+
+    /// Initialize a 'double'.
+    Double(f64),
+
+    /// Initialize a boolean.
+    Bool(bool),
+
+    /// Initialize a character.
+    Char(char),
+
+    /// **(FOR STRINGS ONLY!)** Set the variable to uninitialized with a specific size.
+    SizeString(usize),
 }
 
 impl Default for Code<'_> {
@@ -221,6 +251,9 @@ impl Code<'_> {
                 CArg::Bool(b) => {
                     self.code.push_str(&b.to_string());
                 }
+                CArg::Char(c) => {
+                    self.code.push(c);
+                }
             }
             self.code.push(',');
         }
@@ -232,7 +265,7 @@ impl Code<'_> {
         self.code.push_str(");\n")
     }
 
-    /// # Make a new string variable.
+    /// # Make a new variable.
     ///
     /// ## Example
     ///
@@ -241,7 +274,7 @@ impl Code<'_> {
     ///
     /// let mut code = Code::new();
     ///
-    /// code.new_var_string("a", Some("hello"), None);
+    /// code.new_var("a", VarInit::Initval("hello"));
     ///
     /// assert_eq!(code.to_string(), r#"
     /// int main() {
@@ -253,28 +286,78 @@ impl Code<'_> {
     /// ```
     /// ## NOTE:
     /// Set the `initval` argument to `None` to make the variable uninitialized.
-    pub fn new_var_string<S: AsRef<str>>(
-        &mut self,
-        name: S,
-        initval: Option<S>,
-        size: Option<u32>,
-    ) {
-        self.code.push_str("char ");
-        self.code.push_str(name.as_ref());
+    pub fn new_var<S: AsRef<str>>(&mut self, name: S, value: VarInit) {
+        let name = name.as_ref();
 
-        if initval.is_none() {
-            self.code.push('[');
-            self.code
-                .push_str(&size.expect("Expected size if uninitialized.").to_string());
-            self.code.push_str("];");
-        } else {
-            self.code.push_str("[]=\"");
-            if let Some(val) = initval {
-                self.code.push_str(val.as_ref());
+        match value {
+            VarInit::String(s) => {
+                self.code.push_str("char ");
+                self.code.push_str(name);
+
+                self.code.push_str("[]=\"");
+                self.code.push_str(s);
+                self.code.push_str("\";");
+                self.code.push('\n');
             }
-            self.code.push_str("\";");
+            VarInit::Bool(b) => {
+                self.requires.push("stdbool.h");
+
+                self.code.push_str("bool ");
+                self.code.push_str(name);
+
+                self.code.push('=');
+                self.code.push_str(&b.to_string());
+                self.code.push_str(";\n");
+            }
+            VarInit::Char(c) => {
+                self.code.push_str("char ");
+                self.code.push_str(name);
+
+                self.code.push_str("='");
+                self.code.push(c);
+                self.code.push_str("';\n");
+            }
+            VarInit::Double(f) => {
+                self.code.push_str("double ");
+                self.code.push_str(name);
+
+                self.code.push_str("=");
+                self.code.push_str(&f.to_string());
+                self.code.push_str(";\n");
+            }
+            VarInit::Float(f) => {
+                self.code.push_str("float ");
+                self.code.push_str(name);
+
+                self.code.push_str("=");
+                self.code.push_str(&f.to_string());
+                self.code.push_str(";\n");
+            }
+            VarInit::Int32(i) => {
+                self.code.push_str("int ");
+                self.code.push_str(name);
+
+                self.code.push_str("=");
+                self.code.push_str(&i.to_string());
+                self.code.push_str(";\n");
+            }
+            VarInit::Int64(i) => {
+                self.code.push_str("int ");
+                self.code.push_str(name);
+
+                self.code.push_str("=");
+                self.code.push_str(&i.to_string());
+                self.code.push_str(";\n");
+            }
+            VarInit::SizeString(size) => {
+                self.code.push_str("char ");
+                self.code.push_str(name);
+
+                self.code.push('[');
+                self.code.push_str(&size.to_string());
+                self.code.push_str("];\n");
+            }
         }
-        self.code.push('\n');
     }
 }
 
@@ -366,7 +449,7 @@ mod tests {
     fn test_variable_string() {
         let mut code = Code::new();
 
-        code.new_var_string("msg", Some("Hello"), None);
+        code.new_var("msg", VarInit::String("Hello"));
 
         assert!(code.to_string().contains("char msg[]=\"Hello\";"));
     }
