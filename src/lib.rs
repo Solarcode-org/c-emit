@@ -453,4 +453,75 @@ mod tests {
 
         assert!(code.to_string().contains("char msg[]=\"Hello\";"));
     }
+
+    #[test]
+    fn test_variable_i32() {
+        let mut code = Code::new();
+
+        code.new_var("num", VarInit::Int32(i32::MAX));
+
+        assert!(code
+            .to_string()
+            .contains(format!("int num={};", i32::MAX).as_str()));
+    }
+
+    #[test]
+    fn test_variable_i64() {
+        let mut code = Code::new();
+
+        code.new_var("num", VarInit::Int64(i64::MAX));
+
+        assert!(code
+            .to_string()
+            .contains(format!("int num={};", i64::MAX).as_str()));
+    }
+
+    #[test]
+    fn test_variable_float() {
+        let mut code = Code::new();
+
+        code.new_var("num", VarInit::Float(f32::MAX));
+
+        assert!(code
+            .to_string()
+            .contains(format!("float num={};", f32::MAX).as_str()));
+    }
+
+    #[test]
+    fn test_variable_double() {
+        let mut code = Code::new();
+
+        code.new_var("num", VarInit::Double(f64::MAX));
+
+        assert!(code
+            .to_string()
+            .contains(format!("double num={};", f64::MAX).as_str()));
+    }
+
+    #[test]
+    fn test_variable_bool() {
+        let mut code = Code::new();
+
+        code.new_var("b", VarInit::Bool(true));
+
+        assert!(code.to_string().contains("bool b=true;"));
+    }
+
+    #[test]
+    fn test_variable_char() {
+        let mut code = Code::new();
+
+        code.new_var("c", VarInit::Char('c'));
+
+        assert!(code.to_string().contains("char c='c';"));
+    }
+
+    #[test]
+    fn test_variable_size_string() {
+        let mut code = Code::new();
+
+        code.new_var("msg", VarInit::SizeString(5));
+
+        assert!(code.to_string().contains("char msg[5];"));
+    }
 }
