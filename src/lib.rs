@@ -74,10 +74,37 @@ pub enum CArg<'a> {
     Char(char),
 }
 
-/// # The C Argument.
+/// # The variable types.
+pub enum VarTypes {
+    /// String.
+    String,
+
+    /// i32.
+    Int32,
+
+    /// i64.
+    Int64,
+
+    /// Float.
+    Float,
+
+    /// 'Double'.
+    Double,
+
+    /// Boolean.
+    Bool,
+
+    /// Character.
+    Char,
+}
+
+/// # The variable initialization.
 pub enum VarInit<'a> {
     /// Initialize a string.
     String(&'a str),
+
+    /// Initialize a variable with an identifier.
+    Ident(VarTypes, &'a str),
 
     /// Initialize an i32.
     Int32(i32),
@@ -297,6 +324,34 @@ impl Code<'_> {
                 self.code.push_str("[]=\"");
                 self.code.push_str(s);
                 self.code.push_str("\";");
+                self.code.push('\n');
+            }
+            VarInit::Ident(ty, ident) => {
+                self.code.push_str(match ty {
+                    VarTypes::String => "char ",
+                    VarTypes::Int32 => "int ",
+                    VarTypes::Int64 => "int ",
+                    VarTypes::Float => "float ",
+                    VarTypes::Double => "double ",
+                    VarTypes::Bool => {
+                        self.requires.push("stdbool.h");
+                        "bool "
+                    }
+                    VarTypes::Char => "char ",
+                });
+
+                self.code.push_str(name);
+
+                match ty {
+                    VarTypes::String => {
+                        self.code.push_str("[]");
+                    }
+                    _ => {}
+                }
+
+                self.code.push('=');
+                self.code.push_str(ident);
+                self.code.push_str(";");
                 self.code.push('\n');
             }
             VarInit::Bool(b) => {
@@ -523,5 +578,15 @@ mod tests {
         code.new_var("msg", VarInit::SizeString(5));
 
         assert!(code.to_string().contains("char msg[5];"));
+    }
+
+    #[test]
+    fn test_variable_ident() {
+        let mut code = Code::new();
+
+        code.new_var("s", VarInit::String("X"));
+        code.new_var("t", VarInit::Ident(VarTypes::String, "s"));
+
+        assert!(code.to_string().contains("char s[]=\"X\";\nchar t[]=s;"));
     }
 }
