@@ -48,6 +48,7 @@ pub struct Code<'a> {
 }
 
 /// # The C Argument.
+#[derive(Debug, Clone, Copy)]
 pub enum CArg<'a> {
     /// The String argument.
     String(&'a str),
@@ -75,6 +76,7 @@ pub enum CArg<'a> {
 }
 
 /// # The variable types.
+#[derive(Debug, Clone, Copy)]
 pub enum VarTypes {
     /// String.
     String,
@@ -99,6 +101,7 @@ pub enum VarTypes {
 }
 
 /// # The variable initialization.
+#[derive(Debug, Clone, Copy)]
 pub enum VarInit<'a> {
     /// Initialize a string.
     String(&'a str),
@@ -342,16 +345,13 @@ impl Code<'_> {
 
                 self.code.push_str(name);
 
-                match ty {
-                    VarTypes::String => {
-                        self.code.push_str("[]");
-                    }
-                    _ => {}
+                if let VarTypes::String = ty {
+                    self.code.push_str("[]");
                 }
 
                 self.code.push('=');
                 self.code.push_str(ident);
-                self.code.push_str(";");
+                self.code.push(';');
                 self.code.push('\n');
             }
             VarInit::Bool(b) => {
@@ -376,7 +376,7 @@ impl Code<'_> {
                 self.code.push_str("double ");
                 self.code.push_str(name);
 
-                self.code.push_str("=");
+                self.code.push('=');
                 self.code.push_str(&f.to_string());
                 self.code.push_str(";\n");
             }
@@ -384,7 +384,7 @@ impl Code<'_> {
                 self.code.push_str("float ");
                 self.code.push_str(name);
 
-                self.code.push_str("=");
+                self.code.push('=');
                 self.code.push_str(&f.to_string());
                 self.code.push_str(";\n");
             }
@@ -392,7 +392,7 @@ impl Code<'_> {
                 self.code.push_str("int ");
                 self.code.push_str(name);
 
-                self.code.push_str("=");
+                self.code.push('=');
                 self.code.push_str(&i.to_string());
                 self.code.push_str(";\n");
             }
@@ -400,7 +400,7 @@ impl Code<'_> {
                 self.code.push_str("int ");
                 self.code.push_str(name);
 
-                self.code.push_str("=");
+                self.code.push('=');
                 self.code.push_str(&i.to_string());
                 self.code.push_str(";\n");
             }
